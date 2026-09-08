@@ -1,0 +1,78 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// 1. User
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  boards  BoardMember[]
+  cards   Card[]        @relation("AssignedCards")
+}
+
+// 2. Board (Papan Kerja)
+model Board {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members BoardMember[]
+  lists   List[]
+}
+
+// 3. Pivot Member Board (Biar bisa kolaborasi multi-user)
+model BoardMember {
+  id        String   @id @default(uuid())
+  role      String   @default("MEMBER") // OWNER, MEMBER
+  joinedAt  DateTime @default(now())
+
+  boardId String
+  userId  String
+
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([boardId, userId])
+}
+
+// 4. List (Kolom: Backlog, To Do, In Progress, Done)
+model List {
+  id        String   @id @default(uuid())
+  title     String
+  position  Int      @default(0) // Buat sorting urutan kolom
+  boardId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  board Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  cards Card[]
+}
+
+// 5. Card (Task / Tiket di dalam List)
+model Card {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  position    Int       @default(0) // Buat drag-and-drop urutan kartu
+  dueDate     DateTime?
+  listId      String
+  assigneeId  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  list     List  @relation(fields: [listId], references: [id], onDelete: Cascade)
+  assignee User? @relation("AssignedCards", fields: [assigneeId], references: [id], onDelete: SetNull)
+}
