@@ -9,7 +9,6 @@ const router = Router();
 router.post("/register", validate(registerSchema), register);
 router.post("/login", validate(loginSchema), login);
 
-// Endpoint terproteksi token JWT
 router.get("/me", authenticate, getMe);
 
 export const authRoutes = router;

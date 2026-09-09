@@ -1,8 +1,14 @@
 import { Request, Response, NextFunction } from "express";
-import { AnyZodObject } from "zod";
+import { z } from "zod";
+
+type ValidationSchema = z.ZodObject<{
+  body?: z.ZodType;
+  query?: z.ZodType;
+  params?: z.ZodType;
+}>;
 
 export const validate =
-  (schema: AnyZodObject) =>
+  (schema: ValidationSchema) =>
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const parsed = await schema.parseAsync({
@@ -12,8 +18,8 @@ export const validate =
       });
 
       req.body = parsed.body;
-      req.query = parsed.query;
       req.params = parsed.params;
+
       next();
     } catch (error) {
       next(error);
