@@ -2,7 +2,6 @@ import { prisma } from "../../config/prisma";
 import { AppError } from "../../utils/AppError";
 import { CreateBoardInput } from "./board.schema";
 
-// 1. Bikin board baru + langsung insert creator jadi OWNER (Nested Write)
 export const createBoard = async (userId: string, data: CreateBoardInput) => {
   return prisma.board.create({
     data: {
@@ -44,7 +43,7 @@ export const getUserBoards = async (userId: string) => {
         },
       },
       _count: {
-        select: { lists: true }, // Mirip withCount('lists') di Laravel
+        select: { lists: true },
       },
     },
     orderBy: {
@@ -53,9 +52,7 @@ export const getUserBoards = async (userId: string) => {
   });
 };
 
-// 3. Detail board beserta List dan Card di dalamnya (Eager Loading bertingkat)
 export const getBoardById = async (boardId: string, userId: string) => {
-  // Cek dulu apakah user ini member dari board tersebut
   const member = await prisma.boardMember.findUnique({
     where: {
       boardId_userId: {
@@ -72,7 +69,6 @@ export const getBoardById = async (boardId: string, userId: string) => {
     );
   }
 
-  // Ambil data board, list, dan card secara hierarkis (terurut by position)
   const board = await prisma.board.findUnique({
     where: { id: boardId },
     include: {

@@ -3,8 +3,8 @@ import cors from "cors";
 import helmet from "helmet";
 import { authRoutes } from "./modules/auth/auth.route";
 import { boardRoutes } from "./modules/board/board.route";
+import { listRoutes } from "./modules/list/list.route";
 import { errorHandler } from "./middlewares/errorHandler";
-// import { AppError } from "./utils/AppError";
 
 const app = express();
 
@@ -14,6 +14,7 @@ app.use(express.json());
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/boards", boardRoutes);
+app.use("/api/v1/lists", listRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
