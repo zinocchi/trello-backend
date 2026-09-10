@@ -6,7 +6,6 @@ import { AppError } from "../../utils/AppError";
 import { RegisterInput, LoginInput } from "./auth.schema";
 
 export const registerUser = async (data: RegisterInput) => {
-  // Hashing password dengan bcryptjs
   const hashedPassword = await bcrypt.hash(data.password, 10);
 
   const user = await prisma.user.create({

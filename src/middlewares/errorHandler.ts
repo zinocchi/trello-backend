@@ -5,12 +5,11 @@ import { AppError } from "../utils/AppError";
 import { env } from "../config/env";
 
 export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
-  // 1. Error Validasi Zod
   if (err instanceof ZodError) {
     return res.status(422).json({
       success: false,
       message: "Validation Error",
-      errors: err.errors.map((e) => ({
+      errors: err.issues.map((e) => ({
         field: e.path.join(".").replace("body.", ""),
         message: e.message,
       })),
@@ -18,7 +17,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   }
 
   // 2. Error Unique Constraint Prisma (Email duplikat dsb)
-  if (
+  if (  
     err instanceof Prisma.PrismaClientKnownRequestError &&
     err.code === "P2002"
   ) {

@@ -21,7 +21,6 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const getMe = asyncHandler(async (req: Request, res: Response) => {
-  // req.user diisi otomatis oleh middleware auth
   const user = await authService.getCurrentUser(req.user!.id);
   res.status(200).json({
     success: true,
