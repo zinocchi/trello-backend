@@ -13,12 +13,13 @@ model User {
   id        String   @id @default(uuid())
   name      String
   email     String   @unique
-  password  String
+  password  String?
+  googleId  String?  @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   boards  BoardMember[]
-  cards   Card[]        @relation("AssignedCards")
+  cards   Card[] @relation("AssignedCards")
 }
 
 // 2. Board (Papan Kerja)

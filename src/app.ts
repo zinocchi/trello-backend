@@ -4,6 +4,7 @@ import helmet from "helmet";
 import { authRoutes } from "./modules/auth/auth.route";
 import { boardRoutes } from "./modules/board/board.route";
 import { listRoutes } from "./modules/list/list.route";
+import { cardRoutes } from "./modules/card/card.route";
 import { errorHandler } from "./middlewares/errorHandler";
 
 const app = express();
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/boards", boardRoutes);
 app.use("/api/v1/lists", listRoutes);
+app.use("/api/v1/cards", cardRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
