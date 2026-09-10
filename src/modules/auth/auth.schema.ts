@@ -14,6 +14,12 @@ export const loginSchema = z.object({
     password: z.string().min(1, "Password wajib diisi"),
   }),
 });
+export const googleAuthSchema = z.object({
+  body: z.object({
+    idToken: z.string().min(1, 'Google ID Token wajib dikirim'),
+  }),
+});
 
+export type GoogleAuthInput = z.infer<typeof googleAuthSchema>['body'];
 export type RegisterInput = z.infer<typeof registerSchema>["body"];
 export type LoginInput = z.infer<typeof loginSchema>["body"];

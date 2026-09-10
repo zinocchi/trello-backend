@@ -11,6 +11,15 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
+export const googleLogin = asyncHandler(async (req: Request, res: Response) => {
+  const result = await authService.loginWithGoogle(req.body.idToken);
+  res.status(200).json({
+    success: true,
+    message: "Login Google berhasil",
+    data: result,
+  });
+});
+
 export const login = asyncHandler(async (req: Request, res: Response) => {
   const result = await authService.loginUser(req.body);
   res.status(200).json({
