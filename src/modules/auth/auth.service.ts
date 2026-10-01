@@ -1,46 +1,28 @@
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import { prisma } from "../../config/prisma";
-import { OAuth2Client } from "google-auth-library";
 import { env } from "../../config/env";
 import { AppError } from "../../utils/AppError";
-import { RegisterInput, LoginInput } from "./auth.schema";
+import jwt from "jsonwebtoken";
 
-const googleClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
-
-export const registerUser = async (data: RegisterInput) => {
-  const hashedPassword = await bcrypt.hash(data.password, 10);
-
-  const user = await prisma.user.create({
-    data: {
-      name: data.name,
-      email: data.email,
-      password: hashedPassword,
+export const loginWithGoogle = async (token: string) => {
+  const googleResponse = await fetch(
+    "https://www.googleapis.com/oauth2/v3/userinfo",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      createdAt: true,
-    },
-  });
+  );
 
-  return user;
-};
-
-export const loginWithGoogle = async (idToken: string) => {
-  // 1. Verifikasi token ke server Google
-  const ticket = await googleClient.verifyIdToken({
-    idToken,
-    audience: env.GOOGLE_CLIENT_ID,
-  });
-
-  const payload = ticket.getPayload();
-  if (!payload || !payload.email) {
-    throw new AppError("Token Google tidak valid atau kedaluwarsa", 401);
+  if (!googleResponse.ok) {
+    throw new AppError("Token Google tidak valid atau sudah kedaluwarsa", 401);
   }
 
-  const { sub: googleId, email, name } = payload;
+  const profile = await googleResponse.json();
+  const { sub: googleId, email, name } = profile;
+
+  if (!email) {
+    throw new AppError("Email tidak ditemukan dari akun Google ini", 400);
+  }
 
   let user = await prisma.user.findUnique({
     where: { email },
@@ -61,9 +43,11 @@ export const loginWithGoogle = async (idToken: string) => {
     });
   }
 
-  const token = jwt.sign({ id: user.id, email: user.email }, env.JWT_SECRET, {
-    expiresIn: "1d",
-  });
+  const appToken = jwt.sign(
+    { id: user.id, email: user.email },
+    env.JWT_SECRET,
+    { expiresIn: "1d" },
+  );
 
   return {
     user: {
@@ -71,52 +55,6 @@ export const loginWithGoogle = async (idToken: string) => {
       name: user.name,
       email: user.email,
     },
-    token,
+    token: appToken,
   };
-};
-
-export const loginUser = async (data: LoginInput) => {
-  const user = await prisma.user.findUnique({
-    where: { email: data.email },
-  });
-
-  if (!user) {
-    throw new AppError("Email atau password salah", 401);
-  }
-
-  const isMatch = await bcrypt.compare(data.password, user.password);
-  if (!isMatch) {
-    throw new AppError("Email atau password salah", 401);
-  }
-
-  const token = jwt.sign({ id: user.id, email: user.email }, env.JWT_SECRET, {
-    expiresIn: "1d",
-  });
-
-  return {
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-    },
-    token,
-  };
-};
-
-export const getCurrentUser = async (userId: string) => {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      createdAt: true,
-    },
-  });
-
-  if (!user) {
-    throw new AppError("User tidak ditemukan", 404);
-  }
-
-  return user;
 };
