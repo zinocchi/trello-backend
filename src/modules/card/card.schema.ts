@@ -4,7 +4,7 @@ export const createCardSchema = z.object({
   body: z.object({
     title: z.string().min(1, "Judul card tidak boleh kosong"),
     description: z.string().optional(),
-    dueDate: z.string().datetime().optional(), 
+    dueDate: z.string().datetime().optional(),
     listId: z.string().uuid("ID List harus berupa UUID yang valid"),
     assigneeId: z
       .string()
@@ -29,3 +29,17 @@ export const updateCardSchema = z.object({
 
 export type CreateCardInput = z.infer<typeof createCardSchema>["body"];
 export type UpdateCardInput = z.infer<typeof updateCardSchema>["body"];
+
+export const reorderCardsSchema = z.object({
+  body: z.object({
+    cards: z
+      .array(
+        z.object({
+          id: z.string().uuid(),
+          position: z.number().int().min(0),
+          listId: z.string().uuid(),
+        }),
+      )
+      .min(1, "Minimal kirim 1 data kartu yang di-reorder"),
+  }),
+});

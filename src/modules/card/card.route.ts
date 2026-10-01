@@ -1,12 +1,25 @@
 import { Router } from "express";
 import { authenticate } from "../../middlewares/auth";
 import { validate } from "../../middlewares/validate";
-import { createCardSchema, updateCardSchema } from "./card.schema";
-import { createCard, updateCard, deleteCard } from "./card.controller";
+import {
+  createCardSchema,
+  updateCardSchema,
+  reorderCardsSchema,
+} from "./card.schema";
+import {
+  createCard,
+  updateCard,
+  deleteCard,
+  reorderCards,
+} from "./card.controller";
 
 const router = Router();
 
 router.use(authenticate);
+
+router.patch("/reorder", validate(reorderCardsSchema), reorderCards);
+
+router.post("/:id/attachments", upload.single("file"), uploadAttachment);
 
 router.post("/", validate(createCardSchema), createCard);
 router.patch("/:id", validate(updateCardSchema), updateCard);

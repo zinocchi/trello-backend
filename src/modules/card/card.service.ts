@@ -41,7 +41,6 @@ export const createCard = async (userId: string, data: CreateCardInput) => {
     }
   }
 
-  // 3. Tentukan urutan posisi kartu
   const cardCount = await prisma.card.count({
     where: { listId: data.listId },
   });
@@ -131,4 +130,61 @@ export const deleteCard = async (cardId: string, userId: string) => {
   });
 
   return { message: "Card berhasil dihapus" };
+};
+
+ export const reorderCards = async (
+  userId: string,
+  items: { id: string; position: number; listId: string }[],
+) => {
+  return prisma.$transaction(
+    items.map((item) =>
+      prisma.card.update({
+        where: { id: item.id },
+        data: {
+          position: item.position,
+          listId: item.listId,
+        },
+      }),
+    ),
+  );
+};
+
+export const addAttachment = async (
+  cardId: string,
+  userId: string,
+  file: Express.Multer.File,
+) => {
+  const card = await prisma.card.findUnique({
+    where: { id: cardId },
+    include: {
+      list: {
+        include: {
+          board: {
+            include: {
+              members: { where: { userId } },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!card || card.list.board.members.length === 0) {
+    throw new AppError(
+      "Card tidak ditemukan atau lu bukan member board ini",
+      403,
+    );
+  }
+
+  const fileUrl = `/uploads/${file.filename}`;
+
+  return prisma.attachment.create({
+    data: {
+      filename: file.originalname,
+      url: fileUrl,
+      mimetype: file.mimetype,
+      size: file.size,
+      cardId,
+    },
+  });
 };

@@ -88,6 +88,7 @@ export const getBoardById = async (boardId: string, userId: string) => {
               assignee: {
                 select: { id: true, name: true },
               },
+              attachments: true,
             },
           },
         },
@@ -104,7 +105,6 @@ export const inviteMember = async (
   email: string,
   role: string,
 ) => {
-  // 1. Cek apakah yang mengundang adalah OWNER / member board
   const isMember = await prisma.boardMember.findUnique({
     where: {
       boardId_userId: { boardId, userId: inviterId },
@@ -115,7 +115,6 @@ export const inviteMember = async (
     throw new AppError("Lu gak punya wewenang invite member di board ini", 403);
   }
 
-  // 2. Cari user target berdasarkan email
   const targetUser = await prisma.user.findUnique({
     where: { email },
   });
