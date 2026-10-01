@@ -1,8 +1,7 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "../../utils/asyncHandler";
-import * as cardService from "./card.service";
-import { prisma } from "../../config/prisma";
 import { AppError } from "../../utils/AppError";
+import * as cardService from "./card.service";
 
 export const createCard = asyncHandler(async (req: Request, res: Response) => {
   const card = await cardService.createCard(req.user!.id, req.body);
@@ -34,62 +33,34 @@ export const deleteCard = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-// Logic Reorder Drag & Drop (Eksekusi Batch Transaction)
-export const reorderCards = async (
-  userId: string,
-  items: { id: string; position: number; listId: string }[],
-) => {
-  // Jalankan update posisi sekaligus dalam satu transaksi atomik
-  return prisma.$transaction(
-    items.map((item) =>
-      prisma.card.update({
-        where: { id: item.id },
-        data: {
-          position: item.position,
-          listId: item.listId,
-        },
-      }),
-    ),
-  );
-};
+// Pastikan fungsi ini menerima (req, res), BUKAN langsung panggil Prisma!
+export const reorderCards = asyncHandler(
+  async (req: Request, res: Response) => {
+    await cardService.reorderCards(req.user!.id, req.body.cards);
+    res.status(200).json({
+      success: true,
+      message: "Posisi kartu berhasil diperbarui",
+    });
+  },
+);
 
-// Logic Simpan Attachment File
-export const addAttachment = async (
-  cardId: string,
-  userId: string,
-  file: Express.Multer.File,
-) => {
-  const card = await prisma.card.findUnique({
-    where: { id: cardId },
-    include: {
-      list: {
-        include: {
-          board: {
-            include: {
-              members: { where: { userId } },
-            },
-          },
-        },
-      },
-    },
-  });
+// Controller upload attachment
+export const uploadAttachment = asyncHandler(
+  async (req: Request, res: Response) => {
+    if (!req.file) {
+      throw new AppError("File tidak boleh kosong", 400);
+    }
 
-  if (!card || card.list.board.members.length === 0) {
-    throw new AppError(
-      "Card tidak ditemukan atau lu bukan member board ini",
-      403,
+    const attachment = await cardService.addAttachment(
+      req.params.id,
+      req.user!.id,
+      req.file,
     );
-  }
 
-  const fileUrl = `/uploads/${file.filename}`;
-
-  return prisma.attachment.create({
-    data: {
-      filename: file.originalname,
-      url: fileUrl,
-      mimetype: file.mimetype,
-      size: file.size,
-      cardId,
-    },
-  });
-};
+    res.status(201).json({
+      success: true,
+      message: "File berhasil diupload",
+      data: attachment,
+    });
+  },
+);

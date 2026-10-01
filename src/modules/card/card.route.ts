@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { authenticate } from "../../middlewares/auth";
 import { validate } from "../../middlewares/validate";
+import { upload } from "../../middlewares/upload"; // <-- Tambahkan import ini
 import {
   createCardSchema,
   updateCardSchema,
@@ -11,6 +12,7 @@ import {
   updateCard,
   deleteCard,
   reorderCards,
+  uploadAttachment,
 } from "./card.controller";
 
 const router = Router();
