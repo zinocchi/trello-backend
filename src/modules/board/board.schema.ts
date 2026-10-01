@@ -14,3 +14,15 @@ export const boardIdParamSchema = z.object({
 });
 
 export type CreateBoardInput = z.infer<typeof createBoardSchema>["body"];
+
+export const inviteMemberSchema = z.object({
+  params: z.object({
+    id: z.string().uuid("ID Board harus berupa UUID yang valid"),
+  }),
+  body: z.object({
+    email: z.string().email("Format email tidak valid"),
+    role: z.enum(["MEMBER", "ADMIN"]).default("MEMBER"),
+  }),
+});
+
+export type InviteMemberInput = z.infer<typeof inviteMemberSchema>["body"];

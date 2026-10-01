@@ -28,3 +28,19 @@ export const getBoardDetail = asyncHandler(
     });
   },
 );
+
+export const inviteMember = asyncHandler(
+  async (req: Request, res: Response) => {
+    const result = await boardService.inviteMember(
+      req.params.id,
+      req.user!.id,
+      req.body.email,
+      req.body.role,
+    );
+    res.status(201).json({
+      success: true,
+      message: "Member berhasil ditambahkan ke board",
+      data: result,
+    });
+  },
+);
